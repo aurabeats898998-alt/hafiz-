@@ -19,7 +19,7 @@ const KEYS = {
 };
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  storeName: 'Al Hafiz Paints Store',
+  storeName: 'Al Hafiz Paint Store',
   appName: 'Hafiz',
   address: 'Umarzai Bazar, Near Allied Bank, Umarzai, Charsadda',
   phone1: '03029140071',
@@ -50,7 +50,12 @@ function safeWrite<T>(key: string, value: T): void {
 
 export function loadSettings(): StoreSettings {
   const saved = safeRead<Partial<StoreSettings>>(KEYS.SETTINGS, {});
-  return { ...DEFAULT_SETTINGS, ...saved };
+  const merged = { ...DEFAULT_SETTINGS, ...saved };
+  if (merged.storeName === 'Al Hafiz Paints Store') {
+    merged.storeName = 'Al Hafiz Paint Store';
+    safeWrite(KEYS.SETTINGS, merged);
+  }
+  return merged;
 }
 
 export function saveSettings(settings: StoreSettings): void {

@@ -21,10 +21,10 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'Hafiz — Al Hafiz Paints Store',
+          name: 'Hafiz — Al Hafiz Paint Store',
           short_name: 'Hafiz',
           description:
-            'Al Hafiz Paints Store — Umarzai, Charsadda. Paint colour billing, code scanner, hardware items, and customer khata ledger.',
+            'Al Hafiz Paint Store — Umarzai, Charsadda. Paint colour billing, code scanner, hardware items, and customer khata ledger.',
           theme_color: '#1d4ed8',
           background_color: '#f8fafc',
           display: 'standalone',

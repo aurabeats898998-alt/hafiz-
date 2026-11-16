@@ -73,7 +73,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                   <div>
                     <h3 className="text-base font-bold leading-tight">Install Hafiz App</h3>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      Al Hafiz Paints Store
+                      Al Hafiz Paint Store
                     </p>
                   </div>
                 </div>

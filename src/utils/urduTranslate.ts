@@ -1,10 +1,10 @@
 // Accurate Urdu translations for Print Slip ONLY (store info, colour names, hardware/kilo items, pack sizes)
 
 export const URDU_STORE_INFO = {
-  storeName: 'الحافظ پینٹس سٹور',
+  storeName: 'الحافظ پینٹ سٹور',
   address: 'عمرزئی بازار، نزد الائیڈ بینک، عمرزئی، چارسدہ',
   footerNote:
-    'الحافظ پینٹس سٹور تشریف لانے کا شکریہ۔ سیل بند ڈبہ 7 دن کے اندر تبدیل ہو سکتا ہے۔',
+    'الحافظ پینٹ سٹور تشریف لانے کا شکریہ۔ سیل بند ڈبہ 7 دن کے اندر تبدیل ہو سکتا ہے۔',
 };
 
 const EXACT_PHRASE_URDU: Record<string, string> = {

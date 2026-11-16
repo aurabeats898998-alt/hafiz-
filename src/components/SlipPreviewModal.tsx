@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { Check, Copy, MessageCircle, Printer, X } from 'lucide-react';
+import {
+  Check,
+  Copy,
+  Download,
+  Loader2,
+  MessageCircle,
+  Printer,
+  X,
+} from 'lucide-react';
 import { BillRecord, PrintFormat, StoreSettings } from '../types/khata';
+import { generateSlipPngBlob } from '../utils/slipImage';
 import {
   buildWhatsAppBillText,
   formatRs,
@@ -29,6 +38,9 @@ export const SlipPreviewModal: React.FC<SlipPreviewModalProps> = ({
   onChangePrintFormat,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [sharingImage, setSharingImage] = useState(false);
+  const [downloadingImage, setDownloadingImage] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [format, setFormat] = useState<PrintFormat>(settings.printFormat || 'a4');
   const [slipLang, setSlipLang] = useState<'ur' | 'en'>('ur');
 
@@ -81,9 +93,102 @@ export const SlipPreviewModal: React.FC<SlipPreviewModalProps> = ({
     : buildWhatsAppBillText(bill, settings, previousBaqaya);
 
   const waPhone = normalizePhoneForWhatsApp(bill.customerPhone);
-  const waHref = waPhone
-    ? `https://wa.me/${waPhone}?text=${encodeURIComponent(whatsappText)}`
-    : `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+  const waChatHref = waPhone ? `https://wa.me/${waPhone}` : 'https://wa.me/';
+
+  const triggerDownload = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
+  const handleSaveSlipImage = async () => {
+    try {
+      setDownloadingImage(true);
+      setShareNotice(null);
+      const { blob, fileName } = await generateSlipPngBlob({
+        bill,
+        settings,
+        format,
+        lang: slipLang,
+        previousBaqaya,
+      });
+      triggerDownload(blob, fileName);
+      setShareNotice(`Slip image saved (${fileName}).`);
+      setTimeout(() => setShareNotice(null), 3500);
+    } catch {
+      setShareNotice('Could not generate slip image.');
+    } finally {
+      setDownloadingImage(false);
+    }
+  };
+
+  const handleWhatsAppImageShare = async () => {
+    try {
+      setSharingImage(true);
+      setShareNotice(null);
+      const { blob, fileName } = await generateSlipPngBlob({
+        bill,
+        settings,
+        format,
+        lang: slipLang,
+        previousBaqaya,
+      });
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      const navWithShare = navigator as Navigator & {
+        canShare?: (data?: ShareData) => boolean;
+      };
+
+      if (navWithShare.share && navWithShare.canShare?.({ files: [file] })) {
+        try {
+          await navWithShare.share({
+            files: [file],
+            title: `${settings.storeName} — ${bill.billNo}`,
+            text: `${bill.customerName || 'Customer'} (${bill.billNo})`,
+          });
+          return;
+        } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') {
+            return;
+          }
+          // Fall through to clipboard/download fallback
+        }
+      }
+
+      // Desktop / fallback: copy image to clipboard (if supported) + download PNG
+      let copiedImg = false;
+      if (
+        typeof ClipboardItem !== 'undefined' &&
+        navigator.clipboard &&
+        'write' in navigator.clipboard
+      ) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob }),
+          ]);
+          copiedImg = true;
+        } catch {
+          copiedImg = false;
+        }
+      }
+
+      triggerDownload(blob, fileName);
+      setShareNotice(
+        copiedImg
+          ? 'Slip image copied & downloaded! Open WhatsApp and paste (Ctrl+V) or attach the downloaded PNG.'
+          : 'Slip PNG image downloaded! Open WhatsApp and attach the saved image.'
+      );
+    } catch {
+      setShareNotice('Could not create slip image. Please try Print / PDF.');
+    } finally {
+      setSharingImage(false);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -190,26 +295,50 @@ export const SlipPreviewModal: React.FC<SlipPreviewModalProps> = ({
             <button
               type="button"
               onClick={handleCopy}
-              className="min-h-[38px] px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+              className="min-h-[38px] px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-strong)',
+                color: 'var(--text-primary)',
+              }}
+              title="Copy text summary"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveSlipImage}
+              disabled={downloadingImage}
+              className="min-h-[38px] px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
               style={{
                 backgroundColor: 'var(--bg-surface)',
                 borderColor: 'var(--border-strong)',
                 color: 'var(--text-primary)',
               }}
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied' : 'Copy Text'}</span>
+              {downloadingImage ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>Save Image</span>
             </button>
 
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+            <button
+              type="button"
+              onClick={handleWhatsAppImageShare}
+              disabled={sharingImage}
+              className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer disabled:opacity-60"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </a>
+              {sharingImage ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <MessageCircle className="w-3.5 h-3.5" />
+              )}
+              <span>WhatsApp Slip Image</span>
+            </button>
 
             <button
               type="button"
@@ -236,6 +365,24 @@ export const SlipPreviewModal: React.FC<SlipPreviewModalProps> = ({
             </button>
           </div>
         </div>
+
+        {shareNotice && (
+          <div
+            className="no-print px-4 py-2.5 border-b bg-emerald-500/10 border-emerald-500/30 text-xs flex flex-wrap items-center justify-between gap-2"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            <span>{shareNotice}</span>
+            <a
+              href={waChatHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold inline-flex items-center gap-1"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Open WhatsApp Chat</span>
+            </a>
+          </div>
+        )}
 
         {/* Printable Paper Area (Always crisp white paper & black ink) */}
         <div className="overflow-y-auto p-4 sm:p-6 bg-slate-100 dark:bg-slate-950 print:bg-white print:p-0 print:overflow-visible">
