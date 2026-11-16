@@ -13,6 +13,7 @@ import { BillsHistoryView } from './components/BillsHistoryView';
 import { ColorScannerModal } from './components/ColorScannerModal';
 import { ColoursCatalogView } from './components/ColoursCatalogView';
 import { KhataLedgerView } from './components/KhataLedgerView';
+import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallButton';
 import { SettingsView } from './components/SettingsView';
 import { SlipPreviewModal } from './components/SlipPreviewModal';
 import {
@@ -549,20 +550,23 @@ export default function App() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleCycleTheme}
-            className="min-h-[38px] px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-2 cursor-pointer shrink-0"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-strong)',
-              color: 'var(--text-primary)',
-            }}
-            title="Switch professional theme"
-          >
-            <Palette className="w-3.5 h-3.5" style={{ color: 'var(--accent-text)' }} />
-            <span>Theme: {THEME_LABELS[settings.theme]}</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <PWAInstallButton />
+            <button
+              type="button"
+              onClick={handleCycleTheme}
+              className="min-h-[38px] px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-2 cursor-pointer shrink-0"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-strong)',
+                color: 'var(--text-primary)',
+              }}
+              title="Switch professional theme"
+            >
+              <Palette className="w-3.5 h-3.5" style={{ color: 'var(--accent-text)' }} />
+              <span>Theme: {THEME_LABELS[settings.theme]}</span>
+            </button>
+          </div>
         </div>
 
         {/* Active View */}
@@ -709,6 +713,8 @@ export default function App() {
           handleUpdateSettings({ ...settings, printFormat: fmt })
         }
       />
+
+      <OfflineIndicator />
     </div>
   );
 }

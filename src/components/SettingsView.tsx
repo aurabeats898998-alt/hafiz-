@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Check, Download, Palette, Store, Upload } from 'lucide-react';
 import { PrintFormat, StoreSettings, ThemeId } from '../types/khata';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SettingsViewProps {
   settings: StoreSettings;
@@ -351,6 +352,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               className="hidden"
             />
           </div>
+        </div>
+
+        <div
+          className="rounded-xl border p-5 space-y-3"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border-subtle)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src="/pwa-192x192.png"
+              alt="Hafiz App Logo"
+              className="w-11 h-11 rounded-xl shadow-sm shrink-0"
+            />
+            <div>
+              <h2 className="text-base font-semibold leading-tight">
+                Install Mobile App (Hafiz)
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Add Hafiz with store logo to your mobile home screen
+              </p>
+            </div>
+          </div>
+          <PWAInstallButton variant="card" />
         </div>
       </div>
     </div>
